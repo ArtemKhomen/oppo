@@ -55,13 +55,7 @@ def print_measures_range():
 
 def sort_measures():
     measures = get_values_arr()
-    l = len(measures)
-    for i in range(l):
-        for j in range(l - i - 1):
-            if measures[j].result > measures[j + 1].result:
-                temp = measures[j]
-                measures[j] = measures[j + 1]
-                measures[j + 1] = temp
+    measures.sort(key=lambda x: x.result)
     f = open('values.txt', 'w', encoding="utf8")
     for measure in measures:
         f.write(f'{measure}\n')
