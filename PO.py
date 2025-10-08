@@ -9,18 +9,9 @@ class TempMeasure:
     def __str__(self):
         return f'{self.date} {self.place} {self.result}'
 
-def parse_string(text):
-    city_pattern = r'"([^"]+)"'
-    city = re.findall(city_pattern, text)
-    text = text.replace(city[0], "")
-
-    date_pattern = r'\d{4}\.\d{2}\.\d{2}'
-    date = re.findall(date_pattern, text)
-    text = text.replace(date[0], "")
-
-    value_pattern = r'-?\d+(?:\.\d+)?'
-    value = re.findall(value_pattern, text)
-    return date[0], city[0], float(value[0])
+def parse_string(text, pattern):
+    parsed_string = re.findall(pattern, text)
+    return parsed_string[0]
 
 def get_values_arr():
     f = open('values.txt', 'r', encoding="utf8")
@@ -35,8 +26,10 @@ def get_values_arr():
 def input_measure():
     f = open('values.txt', 'a', encoding="utf8")
     new_measure = input('Введите новое измерение: ')
-    date, city, value = parse_string(new_measure)
-    measure = TempMeasure(date, city, value)
+    date = parse_string(new_measure, r'\d{4}\.\d{2}\.\d{2}')
+    city = parse_string(new_measure, r'"([^"]+)"')
+    value = parse_string(new_measure.replace(date, ''), r'-?\d+(?:\.\d+)?')
+    measure = TempMeasure(date, city, float(value))
     f.write(f'{measure}\n')
     f.close()
 
@@ -57,11 +50,11 @@ def sort_measures():
     measures = get_values_arr()
     l = len(measures)
     for i in range(l):
-        for j in range(l - i - 1):
-            if measures[j].result > measures[j + 1].result:
-                temp = measures[j]
-                measures[j] = measures[j + 1]
-                measures[j + 1] = temp
+        for k in range(l - i - 1):
+            if measures[k].result > measures[k + 1].result:
+                temp = measures[k]
+                measures[k] = measures[k + 1]
+                measures[k + 1] = temp
     f = open('values.txt', 'w', encoding="utf8")
     for measure in measures:
         f.write(f'{measure}\n')
