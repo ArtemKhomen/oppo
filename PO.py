@@ -50,18 +50,34 @@ def print_measures():
     for measure in measures:
         print(measure)
 
-def print_measures_range(ran1, ran2):
-    measures = FileManager.read_measures()
-    for measure in measures:
-        if ran1 <= measure.result <= ran2:
-            print(measure)
+def print_measures_range():
+    print('Введите границы диапазона температур')
+    try:
+        ran1 = float(input('  От (минимальная температура): '))
+        ran2 = float(input('  До (максимальная температура): '))
+        measures = FileManager.read_measures()
+        for measure in measures:
+            if ran1 <= measure.result <= ran2:
+                print(measure)
+    except ValueError:
+        print('Ошибка: Температура должна быть числом')
 
 def sort_measures():
     measures = FileManager.read_measures()
     measures.sort(key=lambda x: x.result)
     FileManager.write_measures(measures)
 
+def exit_program():
+    exit()
+
 def menu():
+    options = {
+        '0': exit_program,
+        '1': input_measure,
+        '2': print_measures,
+        '3': print_measures_range,
+        '4': sort_measures,
+    }
     while True:
         print("""
         1 - Ввести новое измерение
@@ -70,26 +86,17 @@ def menu():
         4 - Отсортировать измерения
         0 - Выход
         """)
-        choice = int(input('Введите опцию: '))
-        if choice == 0:
-            break
-        if choice == 1:
+        choice = input('Введите опцию: ')
+        action = options.get(choice)
+        if action:
             try:
-                input_measure()
+                action()
             except ValueError as error:
                 print(f'Ошибка: {error}')
-        if choice == 2:
-            print_measures()
-        if choice == 3:
-            print('Введите границы диапазона температур')
-            try:
-                ran1 = float(input('  От (минимальная температура): '))
-                ran2 = float(input('  До (максимальная температура): '))
-                print_measures_range(ran1, ran2)
-            except ValueError:
-                print('Ошибка: Температура должна быть числом')
-        if choice == 4:
-            sort_measures()
+            except Exception as error:
+                print(f'Неизвестная ошибка: {error}')
+        else:
+            print("Неверная опция. Попробуйте снова.")
 
 def main():
     menu()
