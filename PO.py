@@ -10,24 +10,26 @@ class TempMeasure:
         return f'{self.date} {self.place} {self.result}'
 
 class FileManager:
-    @staticmethod
-    def read_measures():
+    FILENAME = 'values.txt'
+
+    @classmethod
+    def read_measures(cls):
         measures = []
-        with open('values.txt', 'r', encoding='utf-8') as f:
+        with open(cls.FILENAME, 'r', encoding='utf-8') as f:
             for line in f:
                 m = line.strip().split()
                 measures.append(TempMeasure(m[0], m[1], float(m[2])))
         return measures
 
-    @staticmethod
-    def write_measures(measures):
-        with open('values.txt', 'w', encoding='utf-8') as f:
+    @classmethod
+    def write_measures(cls, measures):
+        with open(cls.FILENAME, 'w', encoding='utf-8') as f:
             for m in measures:
                 f.write(f'{m}\n')
 
-    @staticmethod
-    def append_measure(measure):
-        with open('values.txt', 'a', encoding='utf-8') as f:
+    @classmethod
+    def append_measure(cls, measure):
+        with open(cls.FILENAME, 'a', encoding='utf-8') as f:
             f.write(f'{measure}\n')
 
 def parse_string(text, pattern):
