@@ -72,25 +72,21 @@ def exit_program():
 
 def menu():
     options = {
-        '0': exit_program,
-        '1': input_measure,
-        '2': print_measures,
-        '3': print_measures_range,
-        '4': sort_measures,
+        '0': {'name': 'Выход', 'action': exit_program},
+        '1': {'name': 'Ввести новое измерение', 'action': input_measure},
+        '2': {'name': 'Вывести все измерения', 'action': print_measures},
+        '3': {'name': 'Вывести измерения в диапазоне температур', 'action': print_measures_range},
+        '4': {'name': 'Отсортировать измерения', 'action': sort_measures},
     }
     while True:
-        print("""
-        1 - Ввести новое измерение
-        2 - Вывести все измерения
-        3 - Вывести измерения в диапазоне температур
-        4 - Отсортировать измерения
-        0 - Выход
-        """)
+        print('\nМеню:')
+        for key in options:
+            print(f'{key} - {options[key]["name"]}')
         choice = input('Введите опцию: ')
-        action = options.get(choice)
-        if action:
+        item = options.get(choice)
+        if item:
             try:
-                action()
+                item['action']()
             except ValueError as error:
                 print(f'Ошибка: {error}')
             except Exception as error:
