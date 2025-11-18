@@ -1,13 +1,44 @@
 import re
+from datetime import datetime
+
+date_pattern = r'\d{4}\.\d{2}\.\d{2}'
+place_pattern = r'"([^"]+)"'
+value_pattern = r'(?<!\S)(-?\d+(?:\.\d+)?)(?!\S)\s*$'
 
 class TempMeasure:
-    def __init__(self, date: str, place: str, result: float):
+    MIN_TEMP = -100.0
+    MAX_TEMP = 100.0
+
+    def __init__(self, date: datetime, place: str, result: float):
+
         self.date = date # Дата описывается в формате гггг.мм.дд
         self.place = place
         self.result = result
 
+    @classmethod
+    def from_string(cls, input_string: str):
+        date_str = parse_string(input_string, date_pattern)
+        city = parse_string(input_string, place_pattern)
+        value_str = parse_string(input_string, value_pattern)
+
+        try:
+            date = datetime.strptime(date_str, "%Y.%m.%d")
+            if not (0 <= date.year <= datetime.now().year):
+                raise ValueError(f"Год {date.year} вне реалистичного диапазона (0-{datetime.now().year})")
+        except ValueError as e:
+            raise ValueError(f"Неверный формат даты '{date_str}': {e}")
+
+        try:
+            value = float(value_str)
+            if not (cls.MIN_TEMP <= value <= cls.MAX_TEMP):
+                raise ValueError(f"Температура {value} вне реалистичного диапазона ({cls.MIN_TEMP}-{cls.MAX_TEMP})")
+        except ValueError as e:
+            raise ValueError(f"Неверный формат температуры '{value_str}': {e}")
+
+        return cls(date, city, value)
+
     def __str__(self):
-        return f'{self.date} {self.place} {self.result}'
+        return f'{self.date.strftime("%Y.%m.%d")} {self.place} {self.result}'
 
 class FileManager:
     FILENAME = 'values.txt'
@@ -18,7 +49,13 @@ class FileManager:
         with open(cls.FILENAME, 'r', encoding='utf-8') as f:
             for line in f:
                 m = line.strip().split()
-                measures.append(TempMeasure(m[0], m[1], float(m[2])))
+                date_str = m[0]
+                try:
+                    date = datetime.strptime(date_str, "%Y.%m.%d")
+                except ValueError as e:
+                    print(f"Предупреждение: пропущена некорректная строка '{line}': {e}")
+                    continue
+                measures.append(TempMeasure(date, m[1], float(m[2])))
         return measures
 
     @classmethod
@@ -32,18 +69,22 @@ class FileManager:
         with open(cls.FILENAME, 'a', encoding='utf-8') as f:
             f.write(f'{measure}\n')
 
+patterns = {
+    date_pattern: 'Дата в формате ГГГГ.ММ.ДД',
+    place_pattern: 'Место измерения в кавычках',
+    value_pattern: 'Значение температуры числом'}
+
 def parse_string(text, pattern):
     parsed_string = re.findall(pattern, text)
     if not parsed_string:
-        raise ValueError('Строка введена неверно')
+        raise ValueError(f'Не найдено значение для: {patterns.get(pattern)}')
     return parsed_string[0]
 
 def input_measure():
+    print('Формат: (ГГГГ.ММ.ДД "Город" значение) в любом порядке')
     new_measure = input('Введите новое измерение: ')
-    date = parse_string(new_measure, r'\d{4}\.\d{2}\.\d{2}')
-    city = parse_string(new_measure, r'"([^"]+)"')
-    value = parse_string(new_measure.replace(date, ''), r'-?\d+(?:\.\d+)?')
-    FileManager.append_measure(TempMeasure(date, city, float(value)))
+    measure = TempMeasure.from_string(new_measure)
+    FileManager.append_measure(measure)
 
 def print_measures():
     measures = FileManager.read_measures()
